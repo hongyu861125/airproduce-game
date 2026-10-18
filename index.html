@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國小自然科學：氧氣的製造與檢驗互動實驗室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .flask-glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(215,240,255,0.22) 100%);
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.85), 0 10px 30px rgba(15, 23, 42, 0.12);
+      border: 3.5px solid rgba(255, 255, 255, 0.9);
+    }
+    .lab-table-top {
+      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 32%, #d97706 100%);
+      box-shadow: inset 0 3px 6px rgba(255,255,255,0.8), 0 6px 16px rgba(0,0,0,0.12);
+    }
+    @keyframes flame-flare {
+      0% { transform: scale(0.96) rotate(-2deg); filter: drop-shadow(0 0 16px #ff7700); }
+      50% { transform: scale(1.22) rotate(3deg); filter: drop-shadow(0 0 32px #ff3700); }
+      100% { transform: scale(1.05) rotate(-1deg); filter: drop-shadow(0 0 20px #ffaa00); }
+    }
+    .flame-burst {
+      animation: flame-flare 0.14s infinite alternate ease-in-out;
+    }
+    @keyframes pulse-ember {
+      0%, 100% { transform: scale(0.92); opacity: 0.88; filter: drop-shadow(0 0 5px #ef4444); }
+      50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 14px #f97316); }
+    }
+    .smolder-glow {
+      animation: pulse-ember 0.75s infinite alternate ease-in-out;
+    }
+    @keyframes target-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); transform: translateY(0); }
+      50% { box-shadow: 0 0 0 14px rgba(14, 165, 233, 0); transform: translateY(-3px); }
+    }
+    .item-highlight {
+      animation: target-ring 1.2s infinite ease-in-out;
+    }
+    #incenseStickGroup {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 p-2 sm:p-4 md:p-6 flex flex-col justify-between">
+
+  <header class="max-w-6xl mx-auto w-full mb-3 bg-white rounded-3xl p-4 shadow-sm border border-slate-200">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-3 mb-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-emerald-400 flex items-center justify-center text-white text-2xl font-black shadow-md">
+          O₂
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-0.5 rounded-full">國小五年級自然</span>
+            <span class="bg-sky-100 text-sky-800 text-[11px] font-black px-2.5 py-0.5 rounded-full">空氣與燃燒</span>
+            <span id="badgeCurrentMode" class="bg-amber-100 text-amber-900 text-[11px] font-black px-2.5 py-0.5 rounded-full">🔬 實驗組：雙氧水＋金針菇</span>
+          </div>
+          <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-800 mt-0.5">
+            氧氣的製造與檢驗：連貫互動實驗室
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnModeExp" onclick="switchExperimentMode('experiment')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-600 text-white shadow-sm transition">
+          🔬 實驗組 (雙氧水＋金針菇)
+        </button>
+        <button id="btnModeCtrl" onclick="switchExperimentMode('control')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          💨 對照組 (一般空氣瓶)
+        </button>
+        <button onclick="resetLab()" class="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs sm:text-sm transition flex items-center gap-1">
+          <span>🔄</span> 重新實驗
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5 pt-2 border-t border-slate-100 text-center">
+      <div id="stepTab1" class="p-1.5 sm:p-2 rounded-xl bg-sky-500 text-white font-black text-[11px] sm:text-xs shadow-md transition-all scale-105">
+        <div class="opacity-80 text-[10px]">Step 1</div>
+        <span>1. 倒雙氧水</span>
+      </div>
+      <div id="stepTab2" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] sm:text-xs transition-all opacity-50">
+        <div class="opacity-80 text-[10px]">Step 2</div>
+        <span>2. 加金針菇</span>
+      </div>
+      <div id="stepTab3" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] sm:text-xs transition-all opacity-50">
+        <div class="opacity-80 text-[10px]">Step 3</div>
+        <span>3. 平推蓋片</span>
+      </div>
+      <div id="stepTab4" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] sm:text-xs transition-all opacity-50">
+        <div class="opacity-80 text-[10px]">Step 4</div>
+        <span>4. 點香開縫</span>
+      </div>
+      <div id="stepTab5" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] sm:text-xs transition-all opacity-50">
+        <div class="opacity-80 text-[10px]">Step 5</div>
+        <span>5. 檢驗燃燒</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+    
+    <section class="lg:col-span-8 bg-white rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-200 flex flex-col justify-between">
+      
+      <div id="instructionBanner" class="bg-amber-100 border-l-4 border-amber-500 text-amber-950 p-3 rounded-2xl mb-3 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+          <span id="instructionIcon" class="text-xl">👉</span>
+          <span id="instructionText">步驟 1：請點擊桌上的「雙氧水燒杯」，將 50mL 雙氧水倒入廣口瓶中。</span>
+        </div>
+        <div id="gasProgressBadge" class="hidden text-xs bg-emerald-600 text-white font-black px-2.5 py-1 rounded-full shadow-sm">
+          氧氣充盈度: <span id="gasPercent">0</span>%
+        </div>
+      </div>
+
+      <div id="workbench" class="relative w-full h-[420px] sm:h-[460px] bg-gradient-to-b from-sky-100/50 via-slate-50 to-amber-100/40 rounded-2xl border-2 border-sky-100 overflow-hidden flex items-end justify-center select-none pb-12">
+        
+        <div class="absolute bottom-0 inset-x-0 h-14 lab-table-top border-t-4 border-amber-500/70 flex items-center justify-between px-4 z-0">
+          <span class="text-[11px] font-bold text-amber-900/60 font-mono">國小自然實驗專用操作台</span>
+          <span id="actionHelperHint" class="text-xs font-black text-amber-950 bg-white/80 px-3 py-1 rounded-full shadow-sm animate-pulse">
+            👆 依序點選高光發光器材進行實驗
+          </span>
+        </div>
+
+        <canvas id="fireCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-30"></canvas>
+
+        <div id="pouringStream" class="hidden absolute w-2 bg-sky-300/80 rounded-full z-20 pointer-events-none"
+             style="bottom: 125px; left: calc(50% - 15px); height: 160px;"></div>
+
+        <!-- Apparatus 1: Beaker with 50mL H2O2 -->
+        <div id="beakerItem" onclick="triggerStep1_Pour()" 
+             class="absolute z-10 bottom-14 cursor-pointer transition-all duration-700 ease-out flex flex-col items-center item-highlight"
+             style="left: 10%;">
+          <div class="text-[10px] font-black bg-sky-600 text-white px-2 py-0.5 rounded-full mb-1 shadow whitespace-nowrap">
+            ① 50mL 雙氧水燒杯
+          </div>
+          <div id="beakerBody" class="w-20 h-24 flask-glass rounded-b-xl border-t-0 relative flex flex-col justify-end overflow-hidden shadow-md">
+            <div class="absolute top-1 left-2 text-[9px] font-bold text-sky-800/60">50mL</div>
+            <div id="beakerLiquid" class="w-full h-14 bg-sky-300/60 transition-all duration-700 border-t border-sky-400"></div>
+          </div>
+        </div>
+
+        <!-- Apparatus 2: Petri Dish with Shredded Enoki Mushrooms -->
+        <div id="dishItem" onclick="triggerStep2_Mushroom()" 
+             class="absolute z-10 bottom-14 cursor-pointer transition-all duration-700 ease-out flex flex-col items-center opacity-40 pointer-events-none"
+             style="left: 27%;">
+          <div class="text-[10px] font-black bg-amber-700 text-white px-2 py-0.5 rounded-full mb-1 shadow whitespace-nowrap">
+            ② 剪碎金針菇
+          </div>
+          <div id="dishBody" class="w-20 h-10 flask-glass rounded-full relative flex items-center justify-center shadow bg-white/80">
+            <span id="dishShrooms" class="text-xl">🍄🍄🍄</span>
+          </div>
+        </div>
+
+        <!-- Apparatus 3: Glass Cover Lid -->
+        <div id="glassLidItem" onclick="triggerStep3_Cover()" 
+             class="absolute z-20 h-3.5 bg-cyan-200/85 backdrop-blur-md border-2 border-cyan-400 rounded-full shadow-lg transition-all duration-700 ease-out flex items-center justify-center cursor-pointer opacity-40 pointer-events-none"
+             style="bottom: 295px; left: calc(50% + 40px); width: 170px;">
+          <span class="text-[9px] font-extrabold text-cyan-950 tracking-wider">③ 毛玻璃片 (平推)</span>
+        </div>
+
+        <!-- Apparatus 4: Lighter -->
+        <div id="lighterItem" onclick="triggerStep4_Ignite()" 
+             class="absolute z-20 bottom-14 cursor-pointer transition-all duration-500 ease-out flex flex-col items-center opacity-40 pointer-events-none"
+             style="right: 25%;">
+          <div class="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full mb-1 shadow whitespace-nowrap">
+            ④ 點火器
+          </div>
+          <div class="w-10 h-20 bg-gradient-to-t from-red-600 to-amber-500 rounded-xl shadow-md border-2 border-white flex flex-col items-center justify-start pt-1">
+            <div class="w-3 h-5 bg-slate-300 rounded-t"></div>
+            <span class="text-sm mt-2">🔥</span>
+          </div>
+        </div>
+
+        <!-- Apparatus 5: Incense Stick (Hand at top, burning tip at bottom) -->
+        <div id="incenseStickGroup" class="absolute z-20 flex flex-col items-center cursor-grab transition-all duration-300 select-none"
+             style="bottom: 80px; right: 8%; width: 56px;">
+          
+          <div class="text-[10px] font-black bg-amber-950 text-amber-100 px-2 py-0.5 rounded-full shadow border border-amber-800 mb-0.5 whitespace-nowrap">
+            ✋ 手持香腳端
+          </div>
+          
+          <div class="w-1.5 h-12 bg-amber-300 rounded-t shadow-inner border border-amber-400"></div>
+          
+          <div class="w-2.5 h-40 bg-gradient-to-b from-stone-700 via-stone-800 to-stone-900 shadow relative">
+            <div class="absolute inset-0 bg-stone-950/30"></div>
+          </div>
+
+          <!-- Bottom Tip Zone: Smolder, Flare, or Quenched Wet Tip -->
+          <div class="relative w-full flex items-center justify-center -mt-0.5">
+            <!-- Smoldering Ember -->
+            <div id="bottomEmber" class="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-red-600 via-orange-500 to-yellow-300 shadow-[0_0_12px_#ff2200] hidden smolder-glow"></div>
+            
+            <!-- Resurgent Vigorous Fire in O2 -->
+            <div id="bottomBigFire" class="hidden absolute top-0 flex flex-col items-center pointer-events-none">
+              <div class="w-12 h-20 bg-gradient-to-b from-transparent via-amber-400 to-red-600 rounded-full flame-burst blur-[1px] opacity-95"></div>
+              <div class="absolute top-2 w-6 h-12 bg-gradient-to-b from-white via-yellow-200 to-amber-400 rounded-full flame-burst"></div>
+              <div class="absolute -top-8 w-24 h-24 bg-amber-400/30 rounded-full blur-xl"></div>
+            </div>
+
+            <!-- Wet Quenched Black Tip -->
+            <div id="bottomWetTip" class="w-3.5 h-3.5 rounded-full bg-slate-900 border border-slate-700 hidden"></div>
+          </div>
+
+          <div id="incenseStatusTag" class="mt-2 text-[10px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-md shadow border whitespace-nowrap">
+            未點燃
+          </div>
+        </div>
+
+        <!-- Center Apparatus: Wide-Mouth Flask -->
+        <div id="mainFlask" class="relative w-48 h-72 flask-glass rounded-b-3xl rounded-t-lg flex flex-col justify-end overflow-hidden shadow-2xl z-10"
+             style="bottom: 0px;">
+          
+          <div class="absolute top-0 inset-x-0 h-2.5 bg-white/70 border-b border-cyan-200"></div>
+
+          <div id="oxygenJarAura" class="absolute inset-0 bg-emerald-300/10 opacity-0 transition-opacity duration-1000 flex flex-col items-center justify-start pt-6 pointer-events-none">
+            <span id="gasAuraTag" class="text-[11px] font-black text-emerald-800 bg-white/90 px-3 py-0.5 rounded-full shadow border border-emerald-200">
+              收集氧氣中 (O₂)
+            </span>
+          </div>
+
+          <!-- Solution Liquid Layer -->
+          <div id="jarLiquid" class="w-full h-0 bg-sky-200/50 transition-all duration-1000 relative flex items-end justify-center">
+            
+            <div id="jarMushrooms" class="hidden w-full flex justify-around items-end px-3 pb-1 opacity-90">
+              <span class="text-xl transform -rotate-12">🍄</span>
+              <span class="text-lg transform rotate-12">🍄</span>
+              <span class="text-base transform -rotate-45">🍄</span>
+              <span class="text-xl transform rotate-6">🍄</span>
+            </div>
+
+            <canvas id="bubblesCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+          </div>
+
+          <!-- Graduation Marks (250ml ~ 50ml) -->
+          <div class="absolute left-2.5 bottom-3 top-8 flex flex-col justify-between text-[9px] font-mono text-slate-400 pointer-events-none">
+            <span>250ml</span>
+            <span>200ml</span>
+            <span>150ml</span>
+            <span>100ml</span>
+            <span id="mark50" class="text-slate-400 font-bold px-1 rounded transition-colors">50ml</span>
+          </div>
+
+          <div class="absolute top-2 right-2 w-2.5 h-48 bg-gradient-to-b from-white/60 to-transparent rounded-full pointer-events-none"></div>
+        </div>
+
+      </div>
+
+      <!-- Action helper buttons and quick operations -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+        <div class="text-xs text-slate-600 font-medium">
+          💡 <span id="bottomTips">提示：檢驗時可拖曳線香或點擊自動按鈕；<b>小心不要碰到底部液體喔！</b></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnRelight" onclick="relightIncenseAction()" class="hidden px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs sm:text-sm transition shadow-md animate-bounce flex items-center gap-1.5 cursor-pointer">
+            <span>🔥</span> 重新點燃線香
+          </button>
+          <button id="btnAutoInsert" onclick="toggleIncenseInsert()" disabled class="px-3 py-1.5 bg-slate-200 text-slate-400 rounded-xl font-bold text-xs transition cursor-not-allowed">
+            🥢 自動插入/移出線香
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="lg:col-span-4 flex flex-col gap-4">
+      
+      <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-1.5">
+            <span>📋</span> 實驗觀察紀錄表
+          </h2>
+          <span id="modeTag" class="text-[11px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-lg">
+            實驗組 (O₂)
+          </span>
+        </div>
+        <div id="observationLog" class="text-xs text-slate-600 space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200 h-[155px] overflow-y-auto">
+          <p class="text-slate-500">• 實驗器材準備齊全，請從【步驟 1】倒入雙氧水開始。</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-4 shadow-lg border border-slate-200">
+        <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
+          <span>⚖️</span> 燃燒現象快速對照
+        </h3>
+        <table class="w-full text-[11px] text-left border-collapse rounded-xl overflow-hidden">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 font-bold">
+              <th class="p-2">組別</th>
+              <th class="p-2">瓶內氣體</th>
+              <th class="p-2">線香反應</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="bg-emerald-50/60 font-semibold text-emerald-950">
+              <td class="p-2">實驗組</td>
+              <td class="p-2">純氧 (O₂)</td>
+              <td class="p-2 text-rose-600 font-bold">火星劇烈復燃爆發大火 🔥</td>
+            </tr>
+            <tr class="bg-slate-50 text-slate-600">
+              <td class="p-2">對照組</td>
+              <td class="p-2">空氣 (約21% O₂)</td>
+              <td class="p-2">維持微弱暗紅火星 💨</td>
+            </tr>
+            <tr class="bg-amber-50/70 text-amber-900 font-bold">
+              <td class="p-2">注意操作</td>
+              <td class="p-2">接觸底液</td>
+              <td class="p-2 text-slate-700">嗤一聲熄滅冒白煙 ⚠️</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-4 sm:p-5 shadow-lg border border-emerald-200 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 class="text-sm sm:text-base font-black text-emerald-900 mb-2 flex items-center gap-1.5">
+            <span>🎯</span> 五年級自然觀念小挑戰
+          </h3>
+          <div id="quizContainer" class="space-y-2">
+            <div class="bg-white/95 p-3 rounded-2xl shadow-sm border border-emerald-100">
+              <div id="quizQ" class="text-xs font-bold text-slate-800 mb-2">載入問題中...</div>
+              <div id="quizOptions" class="space-y-1.5"></div>
+              <div id="quizFeedback" class="hidden mt-2 p-2 rounded-xl text-xs font-bold"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2 border-t border-emerald-200/80 flex items-center justify-between text-xs">
+          <span class="text-emerald-800 font-bold">測驗題數：<span id="quizScoreText">1 / 3 題</span></span>
+          <button onclick="nextQuiz()" class="text-emerald-700 font-black hover:underline">
+            換下一題 ➡️
+          </button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const SoundLab = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      },
+      playPourWater() {
+        this.init();
+        const bufferSize = this.ctx.sampleRate * 1.2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.15;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 1.2);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 1.2);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      },
+      playPopDrop() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(850, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      },
+      playFireBurst() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(320, this.ctx.currentTime + 0.35);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.45);
+      },
+      playQuenchSizzle() {
+        this.init();
+        const bufferSize = this.ctx.sampleRate * 0.7;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.3;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(3000, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(1000, this.ctx.currentTime + 0.7);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.45, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+    };
+
+    let currentMode = 'experiment'; // 'experiment' | 'control'
+    let currentStep = 1;            // 1 to 5 strictly linear
+    let isIncenseLit = false;
+    let isIncenseQuenched = false;
+    let isIncenseInJarGas = false;
+    let isDraggingStick = false;
+    let dragStartX = 0, dragStartY = 0;
+    let initialStickLeft = 0, initialStickTop = 0;
+
+    const beakerItem = document.getElementById('beakerItem');
+    const beakerLiquid = document.getElementById('beakerLiquid');
+    const pouringStream = document.getElementById('pouringStream');
+    const dishItem = document.getElementById('dishItem');
+    const dishShrooms = document.getElementById('dishShrooms');
+    const glassLidItem = document.getElementById('glassLidItem');
+    const lighterItem = document.getElementById('lighterItem');
+    const incenseStickGroup = document.getElementById('incenseStickGroup');
+    const bottomEmber = document.getElementById('bottomEmber');
+    const bottomBigFire = document.getElementById('bottomBigFire');
+    const bottomWetTip = document.getElementById('bottomWetTip');
+    const incenseStatusTag = document.getElementById('incenseStatusTag');
+    const btnRelight = document.getElementById('btnRelight');
+    const btnAutoInsert = document.getElementById('btnAutoInsert');
+
+    const mainFlask = document.getElementById('mainFlask');
+    const jarLiquid = document.getElementById('jarLiquid');
+    const jarMushrooms = document.getElementById('jarMushrooms');
+    const oxygenJarAura = document.getElementById('oxygenJarAura');
+    const mark50 = document.getElementById('mark50');
+
+    const instructionIcon = document.getElementById('instructionIcon');
+    const instructionText = document.getElementById('instructionText');
+    const gasProgressBadge = document.getElementById('gasProgressBadge');
+    const gasPercent = document.getElementById('gasPercent');
+    const observationLog = document.getElementById('observationLog');
+
+    const bubblesCanvas = document.getElementById('bubblesCanvas');
+    const bubbleCtx = bubblesCanvas.getContext('2d');
+    let bubbles = [];
+
+    function resizeBubblesCanvas() {
+      bubblesCanvas.width = bubblesCanvas.parentElement.clientWidth || 192;
+      bubblesCanvas.height = bubblesCanvas.parentElement.clientHeight || 100;
+    }
+    window.addEventListener('resize', resizeBubblesCanvas);
+
+    class Bubble {
+      constructor(w, h) {
+        this.x = Math.random() * (w - 20) + 10;
+        this.y = h;
+        this.radius = Math.random() * 3.5 + 1.2;
+        this.speed = Math.random() * 2.2 + 1.5;
+        this.alpha = Math.random() * 0.7 + 0.3;
+      }
+      update() {
+        this.y -= this.speed;
+        this.alpha -= 0.003;
+      }
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, this.alpha)})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(180, 230, 255, ${Math.max(0, this.alpha)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+
+    function animateBubbles() {
+      bubbleCtx.clearRect(0, 0, bubblesCanvas.width, bubblesCanvas.height);
+      if (currentMode === 'experiment' && currentStep >= 3) {
+        if (Math.random() < 0.65) {
+          bubbles.push(new Bubble(bubblesCanvas.width, bubblesCanvas.height));
+        }
+      }
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        bubbles[i].update();
+        bubbles[i].draw(bubbleCtx);
+        if (bubbles[i].y < 0 || bubbles[i].alpha <= 0) {
+          bubbles.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animateBubbles);
+    }
+    resizeBubblesCanvas();
+    animateBubbles();
+
+    const fireCanvas = document.getElementById('fireCanvas');
+    const fireCtx = fireCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeFireCanvas() {
+      const bench = document.getElementById('workbench');
+      fireCanvas.width = bench.clientWidth;
+      fireCanvas.height = bench.clientHeight;
+    }
+    window.addEventListener('resize', resizeFireCanvas);
+    resizeFireCanvas();
+
+    class LabParticle {
+      constructor(x, y, mode) {
+        this.x = x;
+        this.y = y;
+        this.mode = mode; // 'flame' | 'smolder' | 'quench'
+        if (mode === 'flame') {
+          this.size = Math.random() * 3.5 + 2;
+          this.vx = (Math.random() - 0.5) * 3.2;
+          this.vy = -(Math.random() * 3.5 + 1.2);
+          this.alpha = 1;
+          this.color = Math.random() > 0.4 ? 'rgba(255,200,50,' : 'rgba(255,80,20,';
+          this.fade = 0.035;
+        } else if (mode === 'smolder') {
+          this.size = Math.random() * 2.5 + 1.5;
+          this.vx = (Math.random() - 0.5) * 0.8;
+          this.vy = -(Math.random() * 1.5 + 0.8);
+          this.alpha = 0.7;
+          this.color = 'rgba(220,225,230,';
+          this.fade = 0.015;
+        } else {
+          // quench steam cloud
+          this.size = Math.random() * 5 + 3;
+          this.vx = (Math.random() - 0.5) * 4;
+          this.vy = -(Math.random() * 2.5 + 1.5);
+          this.alpha = 0.9;
+          this.color = 'rgba(240,240,245,';
+          this.fade = 0.02;
+        }
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.size += (this.mode === 'quench' ? 0.15 : 0.04);
+        this.alpha -= this.fade;
+      }
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `${this.color} ${Math.max(0, this.alpha)})`;
+        ctx.fill();
+      }
+    }
+
+    function animateParticles() {
+      fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
+      const emberTarget = isIncenseQuenched ? bottomWetTip : bottomEmber;
+      const emberRect = emberTarget.getBoundingClientRect();
+      const benchRect = document.getElementById('workbench').getBoundingClientRect();
+      const tipX = (emberRect.left + emberRect.width / 2) - benchRect.left;
+      const tipY = (emberRect.top + emberRect.height / 2) - benchRect.top;
+
+      if (isIncenseLit && !isIncenseQuenched && tipX > 0 && tipY > 0 && tipX < fireCanvas.width) {
+        const isBigBurst = !bottomBigFire.classList.contains('hidden');
+        if (isBigBurst) {
+          particles.push(new LabParticle(tipX + (Math.random() - 0.5) * 12, tipY, 'flame'));
+          if (Math.random() < 0.5) particles.push(new LabParticle(tipX, tipY, 'flame'));
+        } else {
+          if (Math.random() < 0.45) particles.push(new LabParticle(tipX, tipY, 'smolder'));
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw(fireCtx);
+        if (particles[i].alpha <= 0) particles.splice(i, 1);
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    function logEvent(text) {
+      observationLog.innerHTML += `<p class="leading-relaxed text-slate-700">• ${text}</p>`;
+      observationLog.scrollTop = observationLog.scrollHeight;
+    }
+
+    function updateStepIndicator(step) {
+      for (let i = 1; i <= 5; i++) {
+        const tab = document.getElementById(`stepTab${i}`);
+        if (i < step) {
+          tab.className = "p-1.5 sm:p-2 rounded-xl bg-emerald-600 text-white font-bold text-[11px] sm:text-xs shadow-sm transition-all";
+        } else if (i === step) {
+          tab.className = "p-1.5 sm:p-2 rounded-xl bg-sky-500 text-white font-black text-[11px] sm:text-xs shadow-md transition-all scale-105";
+        } else {
+          tab.className = "p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] sm:text-xs transition-all opacity-50";
+        }
+      }
+    }
+
+    function triggerStep1_Pour() {
+      if (currentStep !== 1) return;
+      beakerItem.onclick = null;
+      beakerItem.classList.remove('item-highlight');
+      
+      instructionIcon.innerText = "⏳";
+      instructionText.innerText = "正在將 50mL 雙氧水緩緩注入廣口瓶中...";
+      SoundLab.playPourWater();
+
+      beakerItem.style.transform = "translate(120px, -150px) rotate(-55deg)";
+      
+      setTimeout(() => {
+        pouringStream.classList.remove('hidden');
+        beakerLiquid.style.height = "0%";
+        jarLiquid.style.height = "32%";
+        mark50.className = "text-sky-700 font-black bg-sky-100 px-1 rounded";
+      }, 400);
+
+      setTimeout(() => {
+        pouringStream.classList.add('hidden');
+        beakerItem.style.transform = "translate(0px, 0px) rotate(0deg)";
+        beakerItem.classList.add('opacity-40', 'pointer-events-none');
+        logEvent("已將 <b>50 mL 雙氧水</b> 準確倒入廣口瓶，液位達 50ml 刻度線。");
+
+        currentStep = 2;
+        updateStepIndicator(2);
+        instructionIcon.innerText = "🍄";
+        instructionText.innerText = "步驟 2：請點擊「剪碎金針菇」培養皿，加入雙氧水中！";
+        dishItem.classList.remove('opacity-40', 'pointer-events-none');
+        dishItem.classList.add('item-highlight');
+      }, 1500);
+    }
+
+    function triggerStep2_Mushroom() {
+      if (currentStep !== 2) return;
+      dishItem.onclick = null;
+      dishItem.classList.remove('item-highlight');
+
+      instructionIcon.innerText = "⏳";
+      instructionText.innerText = "正在將剪碎的金針菇倒入瓶中...";
+      SoundLab.playPopDrop();
+
+      dishItem.style.transform = "translate(70px, -170px) rotate(-45deg)";
+
+      setTimeout(() => {
+        dishShrooms.innerText = "✨";
+        jarMushrooms.classList.remove('hidden');
+        resizeBubblesCanvas();
+        SoundLab.playPopDrop();
+      }, 450);
+
+      setTimeout(() => {
+        dishItem.style.transform = "translate(0px, 0px) rotate(0deg)";
+        dishItem.classList.add('opacity-40', 'pointer-events-none');
+        logEvent("放入剪碎金針菇！金針菇含有的<b>過氧化氫酶</b>立即催化雙氧水，瓶底冒出大量氧氣細泡！");
+
+        currentStep = 3;
+        updateStepIndicator(3);
+        instructionIcon.innerText = "🛡️";
+        instructionText.innerText = "步驟 3：氣體正迅速溢散！請點擊「毛玻璃片」平推完全蓋住瓶口密閉集氣！";
+        glassLidItem.classList.remove('opacity-40', 'pointer-events-none');
+        glassLidItem.classList.add('item-highlight');
+      }, 1200);
+    }
+
+    function triggerStep3_Cover() {
+      if (currentStep !== 3) return;
+      glassLidItem.onclick = null;
+      glassLidItem.classList.remove('item-highlight');
+
+      glassLidItem.style.left = "calc(50% - 85px)";
+      instructionIcon.innerText = "⏳";
+      instructionText.innerText = "毛玻璃片已嚴密封口！正在瓶內收集高濃度氧氣...";
+      gasProgressBadge.classList.remove('hidden');
+
+      let p = 0;
+      const progressTimer = setInterval(() => {
+        p += 20;
+        gasPercent.innerText = p;
+        if (p >= 100) {
+          clearInterval(progressTimer);
+          oxygenJarAura.style.opacity = '1';
+          logEvent("廣口瓶口已密封，瓶內<b>氧氣已充滿 (100%)</b>，準備進行燃燒檢驗！");
+
+          currentStep = 4;
+          updateStepIndicator(4);
+          instructionIcon.innerText = "🔥";
+          instructionText.innerText = "步驟 4：請點擊「點火器」點燃線香，並將玻璃片推開一小縫！";
+          lighterItem.classList.remove('opacity-40', 'pointer-events-none');
+          lighterItem.classList.add('item-highlight');
+        }
+      }, 280);
+    }
+
+    function triggerStep4_Ignite() {
+      if (currentStep !== 4) return;
+      lighterItem.onclick = null;
+      lighterItem.classList.remove('item-highlight');
+
+      instructionIcon.innerText = "⏳";
+      instructionText.innerText = "正在點燃線香下端尖端並吹熄明火...";
+      SoundLab.playFireBurst();
+
+      lighterItem.style.transform = "translate(50px, -80px)";
+
+      setTimeout(() => {
+        isIncenseLit = true;
+        isIncenseQuenched = false;
+        bottomEmber.classList.remove('hidden');
+        bottomWetTip.classList.add('hidden');
+        incenseStatusTag.innerText = "下端微燃紅星（冒白煙）";
+        incenseStatusTag.className = "mt-2 text-[10px] font-black bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md shadow border border-rose-200 whitespace-nowrap";
+        logEvent("線香下端已點燃，吹滅明火，下端尖端呈現<b>微弱暗紅火星</b>並冒出細縷白煙。");
+      }, 600);
+
+      setTimeout(() => {
+        lighterItem.style.transform = "translate(0px, 0px)";
+        lighterItem.classList.add('opacity-40', 'pointer-events-none');
+
+        glassLidItem.style.transform = "translateX(-48px)";
+        logEvent("毛玻璃片已<b>平推移開一小縫隙</b>，符合實驗標準操作（防止大量氧氣逸出）。");
+
+        currentStep = 5;
+        updateStepIndicator(5);
+        instructionIcon.innerText = "👇";
+        instructionText.innerText = "步驟 5：請「拖曳線香」將下端火星伸入小縫！注意不要插太深碰到底部液體喔！";
+        btnAutoInsert.disabled = false;
+        btnAutoInsert.className = "px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-xs transition cursor-pointer shadow-sm";
+        incenseStickGroup.classList.add('item-highlight');
+      }, 1500);
+    }
+
+    function checkIncensePosition() {
+      const tipElement = isIncenseQuenched ? bottomWetTip : bottomEmber;
+      const tipRect = tipElement.getBoundingClientRect();
+      const jarRect = mainFlask.getBoundingClientRect();
+      const liquidRect = jarLiquid.getBoundingClientRect();
+
+      const tipCenterX = tipRect.left + tipRect.width / 2;
+      const tipCenterY = tipRect.top + tipRect.height / 2;
+
+      const insideJarHorizontal = tipCenterX >= jarRect.left + 10 && tipCenterX <= jarRect.right - 10;
+      
+      // Check touching liquid
+      const inLiquid = currentMode === 'experiment' 
+        && insideJarHorizontal 
+        && tipCenterY >= liquidRect.top;
+
+      // Check in jar upper gas zone
+      const inGasZone = insideJarHorizontal 
+        && tipCenterY >= jarRect.top + 15 
+        && tipCenterY < liquidRect.top;
+
+      return { inLiquid, inGasZone };
+    }
+
+    function quenchIncenseInLiquid() {
+      if (isIncenseQuenched) return;
+      isIncenseQuenched = true;
+      isIncenseLit = false;
+      isIncenseInJarGas = false;
+
+      bottomBigFire.classList.add('hidden');
+      bottomEmber.classList.add('hidden');
+      bottomWetTip.classList.remove('hidden');
+
+      incenseStatusTag.innerText = "⚠️ 碰水熄滅了！";
+      incenseStatusTag.className = "mt-2 text-[10px] font-black bg-slate-900 text-slate-100 px-2 py-0.5 rounded-md shadow border border-slate-700 whitespace-nowrap";
+
+      SoundLab.playQuenchSizzle();
+
+      // Burst of steam particles
+      const emberRect = bottomWetTip.getBoundingClientRect();
+      const benchRect = document.getElementById('workbench').getBoundingClientRect();
+      const tipX = (emberRect.left + emberRect.width / 2) - benchRect.left;
+      const tipY = (emberRect.top + emberRect.height / 2) - benchRect.top;
+      for (let i = 0; i < 28; i++) {
+        particles.push(new LabParticle(tipX + (Math.random() - 0.5) * 16, tipY, 'quench'));
+      }
+
+      logEvent("⚠️【注意】線香探入太深，<b>碰到底部的雙氧水「嗤」一聲熄滅了！</b>檢驗氧氣時只能停留在上方氣體區喔！");
+      instructionIcon.innerText = "⚠️";
+      instructionText.innerText = "哎呀！線香碰到底部的雙氧水熄滅了！請點擊下方的「🔥 重新點燃線香」再試一次！";
+
+      btnRelight.classList.remove('hidden');
+    }
+
+    function relightIncenseAction() {
+      btnRelight.classList.add('hidden');
+      instructionIcon.innerText = "🔥";
+      instructionText.innerText = "點火器前來重新點燃線香下端...";
+
+      // Bring lighter over to the current incense tip location
+      lighterItem.classList.remove('opacity-40', 'pointer-events-none');
+      const emberTarget = isIncenseQuenched ? bottomWetTip : bottomEmber;
+      const emberRect = emberTarget.getBoundingClientRect();
+      const benchRect = document.getElementById('workbench').getBoundingClientRect();
+      const lighterRect = lighterItem.getBoundingClientRect();
+
+      const targetX = (emberRect.left - benchRect.left) - 35;
+      const targetY = (emberRect.top - benchRect.top) - 15;
+
+      lighterItem.style.left = `${targetX}px`;
+      lighterItem.style.top = `${targetY}px`;
+      lighterItem.style.bottom = 'auto';
+      lighterItem.style.right = 'auto';
+      lighterItem.style.transform = 'scale(1.1)';
+
+      setTimeout(() => {
+        SoundLab.playFireBurst();
+        isIncenseQuenched = false;
+        isIncenseLit = true;
+        bottomWetTip.classList.add('hidden');
+        bottomEmber.classList.remove('hidden');
+        incenseStatusTag.innerText = "下端微燃紅星（已重燃）";
+        incenseStatusTag.className = "mt-2 text-[10px] font-black bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md shadow border border-rose-200 whitespace-nowrap";
+        logEvent("已使用點火器<b>重新點燃線香下端</b>！請小心拖曳檢驗，<b>保持在上方氣體區</b>。");
+      }, 500);
+
+      setTimeout(() => {
+        lighterItem.style.transform = 'scale(1)';
+        lighterItem.style.left = 'auto';
+        lighterItem.style.top = 'auto';
+        lighterItem.style.bottom = '14px';
+        lighterItem.style.right = '25%';
+        lighterItem.classList.add('opacity-40', 'pointer-events-none');
+
+        instructionIcon.innerText = "👇";
+        instructionText.innerText = "已重新點燃！請手持上方，將下端微燃火星探入瓶中氣體區！";
+        updateCombustionState();
+      }, 1300);
+    }
+
+    function updateCombustionState() {
+      if (!isIncenseLit || isIncenseQuenched) return;
+
+      const { inLiquid, inGasZone } = checkIncensePosition();
+
+      if (inLiquid) {
+        quenchIncenseInLiquid();
+        return;
+      }
+
+      if (inGasZone) {
+        if (!isIncenseInJarGas) {
+          isIncenseInJarGas = true;
+          if (currentMode === 'experiment') {
+            bottomBigFire.classList.remove('hidden');
+            incenseStatusTag.innerText = "💥 劇烈猛烈燃燒！";
+            incenseStatusTag.className = "mt-2 text-[10px] font-black bg-amber-500 text-white px-2 py-0.5 rounded-md shadow-lg animate-bounce whitespace-nowrap";
+            SoundLab.playFireBurst();
+            logEvent("🔥【現象確認】微燃線香進入純氧瓶中，下端瞬間<b>劇烈復燃、火光耀眼猛烈</b>！證實氧氣具有<b>助燃性</b>！");
+          } else {
+            bottomBigFire.classList.add('hidden');
+            incenseStatusTag.innerText = "微弱火星（空氣瓶）";
+            incenseStatusTag.className = "mt-2 text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md shadow border whitespace-nowrap";
+            logEvent("【對照組觀察】伸入一般空氣瓶，線香下端依舊只有微弱暗紅光，無劇烈燃燒反應。");
+          }
+        }
+      } else {
+        if (isIncenseInJarGas) {
+          isIncenseInJarGas = false;
+          bottomBigFire.classList.add('hidden');
+          incenseStatusTag.innerText = "下端微燃紅星（瓶外）";
+          incenseStatusTag.className = "mt-2 text-[10px] font-bold bg-white text-rose-700 px-2 py-0.5 rounded-md shadow border border-rose-200 whitespace-nowrap";
+          logEvent("線香移回瓶外空氣中，劇烈火焰立即熄滅，恢復為微弱火星。");
+        }
+      }
+    }
+
+    function moveIncenseToGasZone() {
+      incenseStickGroup.style.transition = "all 0.4s ease-out";
+      incenseStickGroup.style.bottom = "125px";
+      incenseStickGroup.style.right = "calc(50% - 28px)";
+      setTimeout(updateCombustionState, 420);
+    }
+
+    function moveIncenseToBench() {
+      incenseStickGroup.style.transition = "all 0.4s ease-out";
+      incenseStickGroup.style.bottom = "80px";
+      incenseStickGroup.style.right = "8%";
+      incenseStickGroup.style.left = "auto";
+      incenseStickGroup.style.top = "auto";
+      setTimeout(updateCombustionState, 420);
+    }
+
+    function toggleIncenseInsert() {
+      if (currentStep < 5) return;
+      if (isIncenseInJarGas) {
+        moveIncenseToBench();
+      } else {
+        moveIncenseToGasZone();
+      }
+    }
+
+    incenseStickGroup.addEventListener('pointerdown', (e) => {
+      if (currentStep < 5) return;
+      isDraggingStick = true;
+      incenseStickGroup.setPointerCapture(e.pointerId);
+      incenseStickGroup.style.cursor = 'grabbing';
+      incenseStickGroup.style.transition = 'none';
+
+      const rect = incenseStickGroup.getBoundingClientRect();
+      const benchRect = document.getElementById('workbench').getBoundingClientRect();
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      initialStickLeft = rect.left - benchRect.left;
+      initialStickTop = rect.top - benchRect.top;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDraggingStick) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+
+      let newLeft = initialStickLeft + dx;
+      let newTop = initialStickTop + dy;
+
+      const bench = document.getElementById('workbench');
+      const maxLeft = bench.clientWidth - incenseStickGroup.offsetWidth;
+      const maxTop = bench.clientHeight - incenseStickGroup.offsetHeight;
+
+      newLeft = Math.max(10, Math.min(newLeft, maxLeft));
+      newTop = Math.max(10, Math.min(newTop, maxTop));
+
+      incenseStickGroup.style.left = `${newLeft}px`;
+      incenseStickGroup.style.top = `${newTop}px`;
+      incenseStickGroup.style.bottom = 'auto';
+      incenseStickGroup.style.right = 'auto';
+
+      updateCombustionState();
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!isDraggingStick) return;
+      isDraggingStick = false;
+      incenseStickGroup.style.cursor = 'grab';
+      incenseStickGroup.style.transition = 'all 0.3s ease-out';
+      updateCombustionState();
+    });
+
+    function switchExperimentMode(mode) {
+      currentMode = mode;
+      const btnExp = document.getElementById('btnModeExp');
+      const btnCtrl = document.getElementById('btnModeCtrl');
+      const badge = document.getElementById('badgeCurrentMode');
+      const modeTag = document.getElementById('modeTag');
+
+      if (mode === 'experiment') {
+        btnExp.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-600 text-white shadow-sm transition";
+        btnCtrl.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+        badge.innerText = "🔬 實驗組：雙氧水＋金針菇";
+        badge.className = "bg-amber-100 text-amber-900 text-[11px] font-black px-2.5 py-0.5 rounded-full";
+        modeTag.innerText = "實驗組 (O₂)";
+        modeTag.className = "text-[11px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-lg";
+        resetLab();
+      } else {
+        btnCtrl.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-sm transition";
+        btnExp.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+        badge.innerText = "💨 對照組：一般空氣瓶";
+        badge.className = "bg-indigo-100 text-indigo-900 text-[11px] font-black px-2.5 py-0.5 rounded-full";
+        modeTag.innerText = "對照組 (空氣)";
+        modeTag.className = "text-[11px] font-black bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-lg";
+        
+        resetLab();
+        currentStep = 5;
+        updateStepIndicator(5);
+        glassLidItem.style.left = "calc(50% - 85px)";
+        glassLidItem.style.transform = "translateX(-48px)";
+        isIncenseLit = true;
+        isIncenseQuenched = false;
+        bottomEmber.classList.remove('hidden');
+        bottomWetTip.classList.add('hidden');
+        incenseStatusTag.innerText = "下端微燃紅星（對照組）";
+        beakerItem.classList.add('opacity-40', 'pointer-events-none');
+        dishItem.classList.add('opacity-40', 'pointer-events-none');
+        glassLidItem.classList.add('opacity-40', 'pointer-events-none');
+        lighterItem.classList.add('opacity-40', 'pointer-events-none');
+        btnAutoInsert.disabled = false;
+        btnAutoInsert.className = "px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-bold text-xs transition cursor-pointer shadow-sm";
+
+        instructionIcon.innerText = "💨";
+        instructionText.innerText = "【對照組】廣口瓶內只有一般空氣。請拖曳線香伸入小縫，觀察是否會劇烈燃燒。";
+        logEvent("已切換至<b>對照組（一般空氣瓶）</b>。瓶內無化學反應，氧氣含量約為 21%。");
+      }
+    }
+
+    function resetLab() {
+      currentStep = 1;
+      isIncenseLit = false;
+      isIncenseQuenched = false;
+      isIncenseInJarGas = false;
+      bubbles = [];
+      particles = [];
+
+      updateStepIndicator(1);
+
+      beakerItem.style.transform = "translate(0px, 0px) rotate(0deg)";
+      beakerLiquid.style.height = "100%";
+      beakerItem.classList.remove('opacity-40', 'pointer-events-none');
+      beakerItem.classList.add('item-highlight');
+      beakerItem.onclick = triggerStep1_Pour;
+
+      dishItem.style.transform = "translate(0px, 0px) rotate(0deg)";
+      dishShrooms.innerText = "🍄🍄🍄";
+      dishItem.classList.add('opacity-40', 'pointer-events-none');
+      dishItem.classList.remove('item-highlight');
+      dishItem.onclick = triggerStep2_Mushroom;
+
+      glassLidItem.style.left = "calc(50% + 40px)";
+      glassLidItem.style.transform = "translateX(0px)";
+      glassLidItem.classList.add('opacity-40', 'pointer-events-none');
+      glassLidItem.classList.remove('item-highlight');
+      glassLidItem.onclick = triggerStep3_Cover;
+
+      lighterItem.style.transform = "translate(0px, 0px)";
+      lighterItem.style.left = 'auto';
+      lighterItem.style.top = 'auto';
+      lighterItem.style.bottom = '14px';
+      lighterItem.style.right = '25%';
+      lighterItem.classList.add('opacity-40', 'pointer-events-none');
+      lighterItem.classList.remove('item-highlight');
+      lighterItem.onclick = triggerStep4_Ignite;
+
+      incenseStickGroup.style.bottom = "80px";
+      incenseStickGroup.style.right = "8%";
+      incenseStickGroup.style.left = "auto";
+      incenseStickGroup.style.top = "auto";
+      bottomEmber.classList.add('hidden');
+      bottomBigFire.classList.add('hidden');
+      bottomWetTip.classList.add('hidden');
+      incenseStatusTag.innerText = "未點燃";
+      incenseStatusTag.className = "mt-2 text-[10px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-md shadow border whitespace-nowrap";
+      incenseStickGroup.classList.remove('item-highlight');
+
+      jarLiquid.style.height = "0%";
+      jarMushrooms.classList.add('hidden');
+      oxygenJarAura.style.opacity = '0';
+      gasProgressBadge.classList.add('hidden');
+      gasPercent.innerText = "0";
+      mark50.className = "text-slate-400 font-bold px-1 rounded";
+
+      instructionIcon.innerText = "👉";
+      instructionText.innerText = "步驟 1：請點擊桌上的「雙氧水燒杯」，將 50mL 雙氧水倒入廣口瓶中。";
+      btnAutoInsert.disabled = true;
+      btnAutoInsert.className = "px-3 py-1.5 bg-slate-200 text-slate-400 rounded-xl font-bold text-xs transition cursor-not-allowed";
+      btnRelight.classList.add('hidden');
+
+      observationLog.innerHTML = `<p class="text-slate-500">• 實驗室已重置，請從【步驟 1】倒入雙氧水開始。</p>`;
+    }
+
+    const quizDataset = [
+      {
+        q: "1. 在本實驗中，在雙氧水裡加入「剪碎的金針菇」主要功能是什麼？",
+        options: [
+          "提供過氧化氫酶當作催化劑，加速分解出氧氣",
+          "吸收雙氧水裡面的雜質",
+          "當作線香燃燒的燃料",
+          "使廣口瓶產生好聞的香氣"
+        ],
+        ans: 0,
+        explanation: "答對了！金針菇細胞含有豐富的「過氧化氫酶」，能快速催化雙氧水分解釋放出大量氧氣！"
+      },
+      {
+        q: "2. 為什麼微燃的線香伸入充滿氧氣的瓶內氣體時，會瞬間爆發出猛烈大火？",
+        options: [
+          "因為氧氣自己會著火爆炸（可燃性）",
+          "因為氧氣具有「助燃性」，能支持且促進物質劇烈燃燒",
+          "因為瓶子裡面溫度太高",
+          "因為雙氧水濺到了線香上"
+        ],
+        ans: 1,
+        explanation: "完全正確！氧氣本身不會自己燃燒，但能幫助其他物質燃燒，這叫做「助燃性」！"
+      },
+      {
+        q: "3. 檢驗時如果線香伸入過深、碰到了瓶底的液體，會發生什麼事？",
+        options: [
+          "火會燒得更加劇烈變成藍色火焰",
+          "會把水點燃燒乾",
+          "水會降溫隔絕空氣，導致線香「嗤」一聲熄滅",
+          "完全沒有任何影響"
+        ],
+        ans: 2,
+        explanation: "非常正確！水會吸收熱量並隔絕助燃氣體，因此線香碰水會瞬間熄滅，所以檢驗時必須留在上方的氧氣層！"
+      }
+    ];
+
+    let currentQuizIndex = 0;
+
+    function renderQuiz() {
+      const item = quizDataset[currentQuizIndex];
+      document.getElementById('quizQ').innerText = item.q;
+      document.getElementById('quizScoreText').innerText = `${currentQuizIndex + 1} / ${quizDataset.length} 題`;
+      const optContainer = document.getElementById('quizOptions');
+      const fbBox = document.getElementById('quizFeedback');
+      optContainer.innerHTML = '';
+      fbBox.className = 'hidden';
+
+      item.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-2 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 text-[11px] sm:text-xs font-medium transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="font-bold text-emerald-800">${String.fromCharCode(65 + idx)}.</span> <span>${optText}</span>`;
+        btn.onclick = () => checkQuizAnswer(idx);
+        optContainer.appendChild(btn);
+      });
+    }
+
+    function checkQuizAnswer(choice) {
+      const item = quizDataset[currentQuizIndex];
+      const fbBox = document.getElementById('quizFeedback');
+      fbBox.classList.remove('hidden');
+
+      if (choice === item.ans) {
+        fbBox.className = "mt-2 p-2 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 block";
+        fbBox.innerHTML = `🎉 <b>答對了！</b> ${item.explanation}`;
+      } else {
+        fbBox.className = "mt-2 p-2 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 block";
+        fbBox.innerHTML = `❌ <b>再想想看喔！</b> 觀察實驗現象或提示！`;
+      }
+    }
+
+    function nextQuiz() {
+      currentQuizIndex = (currentQuizIndex + 1) % quizDataset.length;
+      renderQuiz();
+    }
+    renderQuiz();
+  </script>
+</body>
+</html>
